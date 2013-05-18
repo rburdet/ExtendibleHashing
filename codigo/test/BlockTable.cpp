@@ -3,7 +3,7 @@
 #include "../logica_BlockTable.h"
 #include "../logica_Reg.h"
 
-#define TEST_FILE "./TESTBLOCKFILE"
+#define TEST_FILE "./test_file_TESTBLOCKFILE"
 using namespace std;
 int DATA[5][2] = {
 	{1, 1},

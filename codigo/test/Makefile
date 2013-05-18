@@ -1,16 +1,14 @@
 ## Makefile TEMPORAL para compilacion de TP Grupal realizado en lenguaje C++
 
-
-
 # CONFIGURACION
 ################
-
 # Nombre del ejecutable.
-target = interfaz_main
 
 # Extensión de los archivos a compilar (c para C, cpp o cc o cxx para C++).
 extension = cpp
 
+TESTS = BlockTable
+TMP_FILE_PREFIX = test_file_
 
 
 # CONFIGURACION "AVANZADA"
@@ -59,7 +57,10 @@ LD = $(CXX)
 endif
 
 # Si no especifica archivos, tomo todos.
-fuentes ?= $(wildcard *.$(extension))
+fuentes ?= $(wildcard ../*.$(extension))
+o_files = $(patsubst %.$(extension),%.o,$(fuentes))
+o_files_no_main = $(filter-out ../interfaz_main.o,$(o_files))
+tmp_file ?= $(wildcard $(TMP_FILE_PREFIX)*)
 
 occ := $(CC)
 ocxx := $(CXX)
@@ -78,26 +79,15 @@ endif
 # REGLAS
 #########
 
-.PHONY: all clean test
+.PHONY: all clean
 
-all: $(target)
+all: $(TESTS)
 
-test: all
-	cd test; make
-
-o_files = $(patsubst %.$(extension),%.o,$(fuentes))
-
-$(target): $(o_files)
-	@if [ -z "$(o_files)" ]; \
-	then \
-		echo "No hay archivos de entrada, recuerde que la extensión debe ser '.$(extension)'."; \
-		false; \
-	fi >&2
-	$(LD) $(LDFLAGS) $(o_files) $(LOADLIBS) $(LDLIBS) -o $(target)
+$(TESTS): $(o_files_no_main)
+	$(LD) $(LDFLAGS) $@.cpp $(o_files_no_main) $(LOADLIBS) $(LDLIBS) -o $@
 
 clean:
-	$(RM) $(o_files) $(VGLOGFILE) $(target) $(targetTest)
-	cd test; make clean
+	$(RM) $(TESTS) $(tmp_file)
 
 valgrind:
 	valgrind $(VGFLAGS) ./$(target) 
