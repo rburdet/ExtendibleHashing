@@ -7,6 +7,7 @@
 
 # Nombre del ejecutable.
 target = interfaz_main
+targetTest = test/BlockTable
 
 # Extensión de los archivos a compilar (c para C, cpp o cc o cxx para C++).
 extension = cpp
@@ -78,11 +79,18 @@ endif
 # REGLAS
 #########
 
-.PHONY: all clean
+.PHONY: all clean test
 
 all: $(target)
 
+test: $(targetTest)
+
 o_files = $(patsubst %.$(extension),%.o,$(fuentes))
+o_files_no_main = $(filter-out interfaz_main.o,$(o_files))
+
+$(targetTest): $(o_files_no_main)
+	$(LD) $(LDFLAGS) $(targetTest).cpp $(o_files_no_main) $(LOADLIBS) $(LDLIBS) -o $(targetTest)
+
 
 $(target): $(o_files)
 	@if [ -z "$(o_files)" ]; \
@@ -93,7 +101,7 @@ $(target): $(o_files)
 	$(LD) $(LDFLAGS) $(o_files) $(LOADLIBS) $(LDLIBS) -o $(target)
 
 clean:
-	$(RM) $(o_files) $(VGLOGFILE) $(target)
+	$(RM) $(o_files) $(VGLOGFILE) $(target) $(targetTest)
 
 valgrind:
 	valgrind $(VGFLAGS) ./$(target) 

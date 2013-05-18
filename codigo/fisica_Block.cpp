@@ -13,13 +13,13 @@ using namespace std;
 
 //TODO: hidratar bloque
 
-Block::Block(int dispersionSize,int blockAdress){
+Block::Block(int dispersionSize, int blockNum){
 	//TODO:revisar que se use all lo que esta aca
 	blockCurrentSize=0;
 	this->dispersionSize=dispersionSize;
 	//this->blockAdress=blockAdress; TODO: Como hago para laburar con el num de bloque?
 	maxBlockSize=MAX_BLOCK_SIZE;
-	blockNum++;
+	this->blockNum = blockNum;
 }
 
 /*
@@ -142,17 +142,23 @@ void Block::write(const char* fileName){ // TODO: pasar a .h
 	if (!archivo->estaAbierto()){
 		archivo->abrirArchivo();
 	}
-	char Buf[MAX_BLOCK_SIZE];
+	//cout << " Max Block Size " << MAX_BLOCK_SIZE << endl;
+	int Buf[MAX_BLOCK_SIZE / sizeof(int)] = {0};
 	int i=0;
 	list<Reg>::iterator it;
 	for(it = regsList.begin(); it!= regsList.end(); it++){
+		//cout << "Voy a guardar esto i=" << i << " id: " << it->getId()  << " add: " << it->getFileAdress() << endl;
 		Buf[i++] = it->getId();
-		cout << " id metida : " << it->getId() << endl;
 		Buf[i++] = it->getFileAdress();
-		cout << "file adress metida: "<< it->getFileAdress()<< endl;
 	}
 
-	archivo->escribirBloque((void*) Buf, this->getBlockNum(),MAX_BLOCK_SIZE);
+	//Imprimo para debuggear
+	//for(unsigned int i=0; i < (MAX_BLOCK_SIZE / sizeof(int) ) ; i+=2)
+	//	printf("i= %d id= %d ad=%d \n", i, Buf[i],  Buf[i+1]);
+	//--
+
+	//cout << "num block " << this->getBlockNum() << endl;
+	archivo->escribirBloque((void*) Buf, this->getBlockNum(), MAX_BLOCK_SIZE);
 	archivo->cerrarArchivo();
 }
 
@@ -165,25 +171,19 @@ void Block::read(const char* fileName){
 		//archivo->abrirArchivo();
 		return;
 	}
-	//Si existe pero esta cerrado, lo abrimos
+	//Si existe pero esta cerrado, lo abrimos -> al pedo
 	if (!archivo->estaAbierto()){
 		archivo->abrirArchivo();
 	}
-	char buf[MAX_BLOCK_SIZE];
+	int buf[MAX_BLOCK_SIZE/sizeof(int)] = {0};
 	list<Reg>aList;
 	archivo->leerBloque((void*)buf,this->getBlockNum());
-	for (int i=0; i < 10 ; i++)
-			cout << (int)buf[i]<< " ";
-	for (int i=0;buf[i]!=0;i++){
+	for (int i=0;buf[i]!=0;i++){ //Cuando viene un id =0 significa qe ya no hay mas info TODO: controlar qe no se pase del buffer
 		Reg* aReg= new Reg(buf[i],buf[i++]);
 		aList.push_back(*aReg);
-		cout << aReg->getId() << " =id, numero : " << i << endl;
+		//cout << i << ") id= " << aReg->getId() << " add=" << aReg->getFileAdress() << endl;
 	}
 	this->setList(aList);
-	for (list<Reg>::iterator it = aList.begin();it !=aList.end();it++)
-	{
-		cout<<"estoy en la lista " << (*it).getId() << endl;
-	}
 	archivo->cerrarArchivo();
 
 }/**/
