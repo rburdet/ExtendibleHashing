@@ -4,46 +4,51 @@
 #include "../logica_Reg.h"
 
 #define TEST_FILE "./test_file_TESTBLOCKFILE"
+#define DATA_LENGTH 65
+
 using namespace std;
-int DATA[5][2] = {
-	{1, 1},
-	{2, 2},
-	{3, 3},
-	{4, 4},
-	{5, 5}
-};
+
+int DATA[DATA_LENGTH][2];
+
+void fillData(){
+	for(int i=0;i<DATA_LENGTH;i++){
+		DATA[i][0] = i+1;
+		DATA[i][1] = i+1;
+	}
+}
 
 int main()
 {
-	int dispersion = 1, blockN = 0;
-	Reg* regs[5];
-	Block *tmpBlock = new Block(dispersion, blockN);
+	BlockTable* aBlockTable = new BlockTable();
+	int error=0;
 
-	for (int i=0;i<5;i++){
-		regs[i] = new Reg(DATA[i][0],DATA[i][1]);
-		tmpBlock->Insert(*regs[i]);
+	//Inserto
+	fillData();
+	for(int i=0;i<DATA_LENGTH;i++){
+		cout << "** Agregando registro "<< i  << endl;
+		Reg *aReg= new Reg(DATA[i][0],DATA[i][0]);
+		aBlockTable->insert(*aReg);
+		delete aReg;
 	}
 
-	tmpBlock->write(TEST_FILE);
-	//tmpBlock->read(TEST_FILE);
-
-	delete tmpBlock;
-	for(int i=0;i<5;i++)
-		delete regs[i];
-
-	tmpBlock = new Block(dispersion, blockN);
-	tmpBlock->read(TEST_FILE);
-
-	list<Reg> regsList = tmpBlock->getRegList();
-
-	list<Reg>::iterator it;
-	int i = 0;
-	for(it = regsList.begin(); it!= regsList.end(); it++){
-		int id = it->getId(), ad = it->getFileAdress();
-		if(id != 0 && (DATA[i][0] != id || DATA[i++][1] != ad))
-			cout << "ERROR i=" << i << " id=" << id << " add=" << ad << endl;
+	//Busco
+	for(int i=0;i<DATA_LENGTH;i++){
+		Reg* myReg = new Reg(DATA[i][0], 1);
+		int ad = aBlockTable->search(*myReg);
+		if( ad != DATA[i][1]){
+			cout << " \t ** Error i=" << i << " id=" << DATA[i][0] << " ad=" << DATA[i][1] << " ret_val=" << ad << endl;
+			error++;
+		}
 	}
 
-	cout << "No error" << endl;
+
+	cout << "fin " ;
+	if(error)
+		cout << "ERROR";
+	cout << endl;
+
+
+	delete aBlockTable;
+
     return 0;
 }

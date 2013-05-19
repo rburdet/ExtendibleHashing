@@ -13,6 +13,9 @@ using namespace std;
 
 //TODO: hidratar bloque
 
+//TODO: deshardcodear!!!
+#define REG_SIZE (sizeof(int)*2)
+
 Block::Block(int dispersionSize, int blockNum){
 	//TODO:revisar que se use all lo que esta aca
 	blockCurrentSize=0;
@@ -28,7 +31,9 @@ Block::Block(int dispersionSize, int blockNum){
 
 
 int Block::Insert(Reg & aReg){
-	this->blockCurrentSize+=aReg.getSize();
+	//TODO: aReg.getSize() -> devuelve cualqiercosa, el size del reg es siempre REG_SIZE. DESHARDCODEAR
+	//this->blockCurrentSize+=aReg.getSize();
+	this->blockCurrentSize+=REG_SIZE;
 	this->regsList.push_back(aReg);
 	return 0;
 
@@ -69,13 +74,18 @@ int Block::getBlockAdress(){
 }*/
 
 bool Block::easyInsert(Reg& aReg){
-	return (aReg.getSize()+ blockCurrentSize < MAX_BLOCK_SIZE);
+	//TODO: aReg.getSize() -> devuelve cualqiercosa, el size del reg es siempre REG_SIZE. DESHARDCODEAR
+	cout << "\t\tregSize " << aReg.getSize() << " REG_SIZE " << REG_SIZE << " blockCurre " << this->blockCurrentSize << " MAX_BLOCK " << MAX_BLOCK_SIZE <<  endl;
+	//return (aReg.getSize()+ blockCurrentSize < MAX_BLOCK_SIZE);
+	//TODO: tiene qeu ser menor o menor e igual?
+	return (REG_SIZE+ this->blockCurrentSize < MAX_BLOCK_SIZE);
 }
 
 void Block::setList(list<Reg> newRegList){
 	this->regsList=newRegList;
 }
 
+//  Devuelve el addres si lo encuentra, sino -1, no ponog 0 por qe puede qe el addres sea 0, no? TODO: Checkear si esto es verdad
 int Block::search(Reg& regToLook){
 	list<Reg>::iterator it;
 	for (it = regsList.begin(); it != regsList.end(); it++){
@@ -85,7 +95,7 @@ int Block::search(Reg& regToLook){
 			return ((*it).getFileAdress());
 		}
 	}
-	return 0;
+	return -1;
 }
 
 //void Block::open(const char* fileName){
@@ -176,14 +186,14 @@ void Block::read(const char* fileName){
 		archivo->abrirArchivo();
 	}
 	int buf[MAX_BLOCK_SIZE/sizeof(int)] = {0};
-	list<Reg>aList;
+
 	archivo->leerBloque((void*)buf,this->getBlockNum());
-	for (int i=0;buf[i]!=0;i++){ //Cuando viene un id =0 significa qe ya no hay mas info TODO: controlar qe no se pase del buffer
+	for (int i=0; ((unsigned int) i)<MAX_BLOCK_SIZE/sizeof(int) && buf[i]!=0; i++){ //Cuando viene un id =0 significa qe ya no hay mas info TODO: controlar qe no se pase del buffer
 		Reg* aReg= new Reg(buf[i],buf[i++]);
-		aList.push_back(*aReg);
+		this->Insert(*aReg);
 		//cout << i << ") id= " << aReg->getId() << " add=" << aReg->getFileAdress() << endl;
+
 	}
-	this->setList(aList);
 	archivo->cerrarArchivo();
 
 }/**/
