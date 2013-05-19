@@ -7,6 +7,7 @@
 
 #include "logica_HashExtensible.h"
 
+
 int HashExtensible::makeNameANumber(string name) {
 	int acum = 0;
 	for (unsigned int i = 0; i < name.length(); i++){
@@ -19,7 +20,6 @@ int HashExtensible::makeNameANumber(string name) {
 }
 
 HashExtensible::~HashExtensible() {
-	// TODO Auto-generated destructor stub
 }
 
 

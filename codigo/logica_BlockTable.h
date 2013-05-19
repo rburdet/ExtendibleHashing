@@ -35,7 +35,6 @@ class BlockTable{
 		void duplicateTable();
 		int search(Reg&); // Busca el registro atraves de la funcion hash
 
-		//TODO:Hacer
 		int open(const char* fileName); //Abre el archivo donde tengo la tabla
 		int close(); // Lo cierra
 

@@ -77,9 +77,8 @@ class Block {
 
 		void read(const char* fileName);
 		void write(const char* fileName);
-		//TODO: solo el cierra
-		void open(const char * fileName);
-		void close();
+//		void open(const char * fileName);
+//		void close();
 		ArchivoBloques* getArchivo();
 
 		~Block();
@@ -88,10 +87,8 @@ class Block {
 		int blockCurrentSize;
 		int maxBlockSize; //Privado? constante?
 
-		//int blockAdress; TODO: SE USA ???
 		int dispersionSize;
 		list<Reg> regsList;
-		//ArchivoBloques* archivo; //privado? constante?
 		int blockNum; //lo puedo llegar a necesitar
 
 	private:

@@ -12,7 +12,6 @@
 using namespace std;
 
 BlockTable::BlockTable() {
-	//TODO:Cambiar esto, hay que crear la tabla con los datos de un archivo donde tenga la tabla
 
 	string name = HASH_BLOCK_TABLE_FILE;
 	this->archivo = new fstream(name.c_str(),ios::in|ios::out|ios::binary);
@@ -24,7 +23,6 @@ BlockTable::BlockTable() {
 
 void BlockTable::hidratateBlockTable(){
 	if(this->size){
-		//TODO: liberar memoria de blockReferences
 		this->archivo->seekg(0,this->archivo->end);
 		this->size = this->archivo->tellg();
 		this->archivo->seekg(0,this->archivo->beg);
@@ -46,88 +44,80 @@ int BlockTable::open(const char * fileName){
 	return 1;
 }
 
-void BlockTable::prueba(Block* aBlock){
-	cout<< "imprimo algo" << aBlock->getCurrentSize()<< endl;
-}
-
-//TODO: por que le paso un registro y no un id solo, osae, al crear un registro ya lo creo con un adres especifico, y si estoy buscando, no se ese adres
-int BlockTable::search(Reg& aReg){ // TODO: persistencia
+//Devuelve -1 si no lo encuentra. El fileAdress para un acceso directo.
+//En aReg.fileAdress queda el fileAdress del id correspondiente
+int BlockTable::search(Reg& aReg){
+	// TODO: persistencia
 	int pos=HashExtensible::doHash(aReg.getId(),this->getSize());
-	
-	//Aca ya tengo que tener la tabla en memoria, siempre supongo que entra toda la tabla en memoria
 	int blockNumber=this->blockReferences[pos];
 	Block *aBlock = new Block(this->getSize(),blockNumber);
-
-	string name=HASH_BLOCK_FILE;
-	aBlock->read(name.c_str());
-
-	//aBlock->getArchivo()->leerBloque((void*)aBlock,blockNumber);
 	return aBlock->search(aReg);
 }
 
 int BlockTable::insert(Reg & aReg){
-	//TODO: ESTO ES UNA NEGRADA ! CAMBIAR -> tenes razon =D
-	//TODO: persistencia
-
 	int pos = HashExtensible::doHash(aReg.getId(),this->getSize());
 	int tmpBlockNumber = this->blockReferences[pos];
-
+//	cout << "pos "<< pos << " temp " << tmpBlockNumber << endl;
 	string name=HASH_BLOCK_FILE;
-
-	cout << "\tpos "<< pos << " temp " << tmpBlockNumber << " dispersion " << this->getSize() << endl;
 	Block *tmpBlock = new Block(this->getSize(),tmpBlockNumber);
 
 	tmpBlock->read(name.c_str());
 
 
+
+	//this->archivo = new ArchivoBloques(MAX_BLOCK_SIZE,".hashBlock");
+	//archivo->abrirArchivo();
+	list<Reg> aList;
+	//tmpBlock->getArchivo()->leerBloque((void*)&aList,tmpBlockNumber);
+	//tmpBlock->setList(aList);
+	//A este bloque lo tengo que hidratar,tener en cuenta que en un archivo se van a guardar solo los registros del bloque
+	//mientras que en otro archivo se va a guardar una tira con todas las posiciones de bloques
+
 	if (tmpBlock->easyInsert(aReg)){
-		cout << "\tentro al easy insert "<<endl;
+	//	cout<< "easy" << endl;
 		tmpBlock->Insert(aReg);
+		cout << "entro al easy insert "<<endl;
+		//aList = tmpBlock->getRegList();
 		tmpBlock->write(name.c_str());
+		//tmpBlock->read(name.c_str());
+
+
+		//tmpBlock->getArchivo()->escribirBloque((void*) &aList,tmpBlock->getBlockNum(),MAX_BLOCK_SIZE);
 	}
 	else {
-		cout << "\tNo es easyInsert " << endl;
+		// la posicion del nuevo bloque va a ser al final del archivo
+		int lastBlockNum=0; //TODO: el numero de bloque se guarda en otro archivo, LO TIENE QUE HACER FEDE
 
 
+		Block * anotherBlock = new Block(tmpBlock->duplicateDispersionSize(),lastBlockNum+1); //HARDCODEADA CABEZA
+
+
+		//si no tengo referencias repetidas tengo que duplicar la tabla
 		if (! canAddBlock(tmpBlock)){
-			cout << "\t\tDuplico tabla" << endl;
 			duplicateTable();
 		}
 
-		// la posicion del nuevo bloque va a ser al final del archivo
-		int lastBlockNum=0; //TODO: el numero de bloque se guarda en otro archivo
-
-		cout << "\tdispersion viejo=" << tmpBlock->getDispersionSize() ;
-		Block * anotherBlock = new Block(tmpBlock->duplicateDispersionSize(),lastBlockNum+1); //HARDCODEADA CABEZA
-		cout << "dispersion new=" << tmpBlock->getDispersionSize()<<endl ;
-
-		//si no tengo referencias repetidas tengo que duplicar la tabla
-		
-
-		cout << "\tinserto bloque" << endl;
 		insertBlock(pos,lastBlockNum+1,tmpBlock->getDispersionSize());
-
-		cout << "\tredisperso" << endl;
 		redisperse(tmpBlock,anotherBlock);
-
-		delete anotherBlock;
-		cout << "\tVuevlo a insertar" << endl;
+		aList = tmpBlock->getRegList();
+		//tmpBlock->getArchivo()->escribirBloque((void*)&aList,tmpBlock->getBlockNum(),tmpBlock->getCurrentSize());
+		aList = anotherBlock->getRegList();
+		//anotherBlock->getArchivo()->escribirBloque((void*)&aList,anotherBlock->getBlockNum(),anotherBlock->getCurrentSize());
 		this->insert(aReg);
+		// Llamar recursivametne this->insert(aReg)
 	}
 	delete tmpBlock;
 
-	//TODO: ESTO de aca
-	//archivo->leerBloque((void*) tmpBlock,blockNumber); No esta implementado
-	//archivo->escribirBloque((void*)tmpBlock,blockNumber); No esta implementado
 	return 0;
 }
+
+
 
 int BlockTable::getSize(){
 	return size;
 }
 
 bool BlockTable::canAddBlock(Block* aBlock){
-	cout << "\t\t disperscionBlock=" << aBlock->getDispersionSize() << " getSize" << this->getSize() << endl;
 	return (aBlock->getDispersionSize()!=this->getSize());
 }
 
@@ -144,9 +134,8 @@ void BlockTable::redisperse(Block* anOldBlock, Block* aNewBlock){
 	HashExtensible* aHash= new HashExtensible();
 	list<Reg>::iterator it;
 	list<Reg> tmpList;
-	list<Reg> anOldBlockList = anOldBlock->getRegList();
 
-	for (it = anOldBlockList.begin(); it != anOldBlockList.end() ; it++) {
+	for (it = anOldBlock->getRegList().begin(); it != anOldBlock->getRegList().end() ; it++) {
 		int pos = aHash->doHash((*it).getId(),this->getSize());
 		int blockNum = this->blockReferences[pos];
 		if( anOldBlock->getBlockNum() == blockNum )
@@ -156,9 +145,6 @@ void BlockTable::redisperse(Block* anOldBlock, Block* aNewBlock){
 	}
 
 	anOldBlock->setList(tmpList); //cabeza
-	string name=HASH_BLOCK_FILE;
-	anOldBlock->write(name.c_str());
-	aNewBlock->write(name.c_str());
 }
 
 
@@ -172,8 +158,6 @@ void BlockTable::duplicateTable(){
 	}
 	delete blockReferences;
 	blockReferences=tmpBlockReference;
-	this->size = newBlockTableSize;
-	cout << "new block size " << this->size << endl;
 }
 
 BlockTable::~BlockTable(){

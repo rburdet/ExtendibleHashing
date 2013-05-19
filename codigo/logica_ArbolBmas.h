@@ -88,37 +88,47 @@ private:
 	};
 
 
-	// Clase interna que representa un nodo del arbol. Dependiendo del nivel
-	// en el que se encuentra, se comportara como un nodo hoja o como un nodo
-	// interno, es decir, sus metodos realizaran distintas acciones dependiendo
-	// de cual de los dos sea
-	class Nodo
+	// Estructura interna que representa un nodo del arbol. Dependiendo del 
+	// nivel en el que se encuentra, se comportara como un nodo hoja o como un 
+	// nodo interno, es decir, sus metodos realizaran distintas acciones 
+	// dependiendo de cual de los dos sea
+	struct Nodo
 	{
-
-	private:
-
 		uint numBloque;							// Numero de bloque del nodo
 		uint nivel;								// Nivel en el que se 
 												// encuentra el nodo
 		uint cantClaves;						// Cantidad actual de claves
 		uint cantMaxClaves;						// Cantidad maxima de claves
 												// permitidas
+		uint nodoHermano;						// Referencia al nodo hermano
+												// (se usa si es nodo hoja)
 		list< uint > claves;					// Claves de registros
 		list< uint > hijos;						// Referencias a hijos (se usa
 												// si es un nodo interno)
 		list< RegistroGenerico > registros;		// Lista de registros (se usa 
 												// si es un nodo hoja)
 
-	public:
-		
 		// Constructor
-		Nodo(uint numBloque, uint nivel, uint cantMaxClaves);
+		Nodo();
+
+		// Destructor
+		~Nodo();
+
+		// Inicializa el nodo.
+		// PRE: 'numBloque' es el numero de bloque en el que se encuentra
+		// almacenado; 'nivel' es el nivel en el que se encuentra el nodo;
+		// 'cantMaxClaves' es la cantidad maxima de claves que puede contener
+		// el nodo (sobrepasado este limite se considera overflow).
+		void inicializar(uint numBloque, uint nivel, uint cantMaxClaves);
 
 		// Inserta el registro en el nodo.
 		// PRE: 'clave' es la clave a insertar; 'registro' es el registro
-		// asociado a dicha clave.
+		// asociado a dicha clave; 'archivo' es un puntero al archivo donde
+		// se almacena el arbol; 'contBloques' es el contador de bloques del
+		// arbol.
 		// POST: devuelve true si queda en overflow o false en caso contrario
-		bool insertar(uint clave, RegistroGenerico registro);
+		bool insertar(uint& clave, RegistroGenerico& registro, 
+			ArchivoBloques *archivo, uint& contBloques);
 
 		// Reparte su contenido con su nodoHermano, pasandole la mitad.
 		// PRE: 'nodoHermano' es un nodo con el que se hara la division
@@ -127,6 +137,9 @@ private:
 
 		// Devuelve el numero de bloque en el que se encuentra el nodo
 		uint getNumBloque();
+
+		// Se imprime el nodo en la salida estandar con su contenido
+		void imprimir(uint nivelDelArbol);
 	};
 
 
