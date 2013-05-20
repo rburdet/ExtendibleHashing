@@ -11,13 +11,16 @@
 
 using namespace std;
 
+//TODO: hidratar bloque
 
+//TODO: deshardcodear!!!
+#define REG_SIZE (sizeof(int)*2)
 
 Block::Block(int dispersionSize, int blockNum){
+	//TODO:revisar que se use all lo que esta aca
 	blockCurrentSize=0;
 	this->dispersionSize=dispersionSize;
 	//this->blockAdress=blockAdress; TODO: Como hago para laburar con el num de bloque?
-	//								 [rburdet]: Con la posicion del archivo de bloques (.HashBlock)
 	maxBlockSize=MAX_BLOCK_SIZE;
 	this->blockNum = blockNum;
 }
@@ -28,7 +31,9 @@ Block::Block(int dispersionSize, int blockNum){
 
 
 int Block::Insert(Reg & aReg){
-	this->blockCurrentSize+=aReg.getSize();
+	//TODO: aReg.getSize() -> devuelve cualqiercosa, el size del reg es siempre REG_SIZE. DESHARDCODEAR
+	//this->blockCurrentSize+=aReg.getSize();
+	this->blockCurrentSize+=REG_SIZE;
 	this->regsList.push_back(aReg);
 	return 0;
 
@@ -53,21 +58,32 @@ int Block::getDispersionSize(){
 	return dispersionSize;
 }
 
+
+// TODO: SE ELIMINA?
+int Block::separate(){
+	return 0; //hacer
+}
+
 int Block::getCurrentSize(){
 	return this->blockCurrentSize;
 }
 
+/* TODO: SE USA  ? ? ?
+int Block::getBlockAdress(){
+	return blockAdress;
+}*/
+
 bool Block::easyInsert(Reg& aReg){
-	cout << " REG_SIZE " << aReg.getSize() << " blockCurre " << this->blockCurrentSize << " MAX_BLOCK " << MAX_BLOCK_SIZE <<  endl;
-	//return (aReg.getSize()+ blockCurrentSize < MAX_BLOCK_SIZE);
-	return (aReg.getSize()+ this->blockCurrentSize < MAX_BLOCK_SIZE);
+	cout << "\t\tregSize " << aReg.getSize()  << " blockCurre " << this->blockCurrentSize << " MAX_BLOCK " << MAX_BLOCK_SIZE <<  endl;
+	//TODO: tiene qeu ser menor o menor e igual?
+	return (aReg.getSize()+ this->blockCurrentSize <= MAX_BLOCK_SIZE);
 }
 
 void Block::setList(list<Reg> newRegList){
 	this->regsList=newRegList;
 }
 
-//  Devuelve el addres si lo encuentra, sino -1, no ponog 0 por qe puede qe el addres sea 0, no?
+//  Devuelve el addres si lo encuentra, sino -1, no ponog 0 por qe puede qe el addres sea 0, no? TODO: Checkear si esto es verdad
 int Block::search(Reg& regToLook){
 	list<Reg>::iterator it;
 	for (it = regsList.begin(); it != regsList.end(); it++){
@@ -80,6 +96,7 @@ int Block::search(Reg& regToLook){
 	return -1;
 }
 
+//void Block::open(const char* fileName){
 
 
 //esto que voy a hacer esta mal peor solo para ver si falla por lo de
@@ -121,7 +138,7 @@ void Block::write(const char*fileName){
 }
 */
 
-void Block::write(const char* fileName){
+void Block::write(const char* fileName){ // TODO: pasar a .h
 	ArchivoBloques* archivo = new ArchivoBloques(MAX_BLOCK_SIZE, fileName);
 	// Inicializamos el archivo de bloques o lo levantamos si ya existia
 	if(archivo->abrirArchivo() == -1){
@@ -157,7 +174,7 @@ void Block::read(const char* fileName){
 	ArchivoBloques* archivo = new ArchivoBloques(MAX_BLOCK_SIZE, fileName);
 	// Inicializamos el archivo de bloques o lo levantamos si ya existia
 	if(archivo->abrirArchivo() == -1){
-		// El archivo no existe, lo creamos
+		// El archivo no existe, lo creamos, TODO: EL WRITE LO CREA
 	//	//archivo->crearArchivo();
 		//archivo->abrirArchivo();
 		return;

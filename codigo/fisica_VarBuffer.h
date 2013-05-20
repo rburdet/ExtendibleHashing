@@ -34,7 +34,7 @@ public:
 private:
     unsigned short int bufferSize;
     unsigned short int maxSize;
-    char* buffer;    
+    char* buffer;
 };
 
 

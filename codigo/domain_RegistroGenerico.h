@@ -24,7 +24,10 @@ private:
 public:
 
 	// Constructor
-	RegistroGenerico(unsigned int clave) : clave(clave) { }
+	RegistroGenerico() { }
+
+	// Setea el identificador (clave) del registro
+	void setClave(unsigned int clave) { this->clave = clave; }
 
 	// Devuelve el identificador (clave) del registro
 	unsigned int getClave() { return this->clave; }

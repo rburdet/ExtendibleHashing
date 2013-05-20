@@ -29,5 +29,5 @@ int Reg:: getId(){
 }
 
 int Reg:: getSize(){
-	return (sizeof(this->id)+sizeof(this->fileAdress));
+	return sizeof(this->id)+sizeof(this->fileAdress);
 }

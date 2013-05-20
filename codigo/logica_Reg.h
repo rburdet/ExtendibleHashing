@@ -11,7 +11,6 @@
 
 class Reg {
 protected:
-//	int size;
 	int fileAdress;
 	int id;
 

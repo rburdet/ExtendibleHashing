@@ -20,6 +20,7 @@ int HashExtensible::makeNameANumber(string name) {
 }
 
 HashExtensible::~HashExtensible() {
+	// TODO Auto-generated destructor stub
 }
 
 

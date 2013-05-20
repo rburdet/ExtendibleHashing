@@ -78,12 +78,9 @@ endif
 # REGLAS
 #########
 
-.PHONY: all clean test
+.PHONY: all clean
 
 all: $(target)
-
-test: all
-	cd test; make
 
 o_files = $(patsubst %.$(extension),%.o,$(fuentes))
 
@@ -96,8 +93,7 @@ $(target): $(o_files)
 	$(LD) $(LDFLAGS) $(o_files) $(LOADLIBS) $(LDLIBS) -o $(target)
 
 clean:
-	$(RM) $(o_files) $(VGLOGFILE) $(target) $(targetTest)
-	cd test; make clean
+	$(RM) $(o_files) $(VGLOGFILE) $(target)
 
 valgrind:
 	valgrind $(VGFLAGS) ./$(target) 

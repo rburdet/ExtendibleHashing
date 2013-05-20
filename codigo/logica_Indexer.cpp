@@ -10,7 +10,7 @@
 
 Indexer::Indexer(){
     fromPath="/home/pablo/tpDatos/7506-tp-grupo07/temas";
-    destPath="/home/pablo/tpDatos/dest/.master";
+    destPath="/home/pablo/tpDatos/dest/";
     rtt = new RTTgenerator(destPath);
 }
 
@@ -41,15 +41,14 @@ int Indexer::indexarCancionesDesde(int mode){
                 std::cout << "Archivo ya indexado. Descartado" << endl;
             }else{
                 std::cout << "OK." << endl << "Indexando..";
-                unsigned int songPosition = this->copyToMaster(*it, destPath);
+                unsigned int songPosition = this->copyToMaster(*it, destPath+".master");
                 this->indexarAutores(header,songPosition);
                 this->indexarTitulo(header,songPosition);
                 this->generateRTT(*it,songPosition);
-
-
             }
         }
     }
+    rtt->pack();
     if(mode){
         //COSAS DE APPEND
     }
@@ -90,7 +89,7 @@ int Indexer::indexarAutores(std::string header, unsigned int songPosition){
     std::list<std::string>::iterator it;
     IndiceAutor *indiceA = new IndiceAutor;
     for(it = autores->begin(); it != autores->end();it++){
-
+        indiceA->agregar(songPosition,*it);
     }
     delete autores;
     delete indiceA;
@@ -100,7 +99,7 @@ int Indexer::indexarAutores(std::string header, unsigned int songPosition){
 int Indexer::indexarTitulo(std::string header, unsigned int songPosition){
     std::string titulo = Utils::getTituloFromHeader(header);
     IndiceTitulo *indiceT = new IndiceTitulo;
-    std::cout << "TITULO: " << titulo << endl;
+    indiceT->agregar(songPosition,titulo);
     delete indiceT;
     return 0;
 }
@@ -117,11 +116,11 @@ int Indexer::generateRTT(std::string songPath, unsigned int songPosition){
         while(getline(lineaS,palabra,' ')){
             palabra = Utils::uniformizarString(palabra);
             std::cout << palabra << endl;
-            position++;
             rtt->indexarPalabra(palabra, songPosition,position);
-
+            position++;
         }
     }
+    f.close();
     return 0;
 }
 

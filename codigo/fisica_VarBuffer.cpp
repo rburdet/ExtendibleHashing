@@ -38,25 +38,25 @@ int VarBuffer::read(fstream &file)
     if (file.eof()) {
         return -1;
     }
-
+    
     unsigned short int readSize;
     file.read((char*)&readSize, sizeof(readSize));
     if (! file.good()) {
         return -2;
     }
-
+    
     if (readSize > this->maxSize) {
         return -3;
     }
-
+    
     this->bufferSize = readSize;
     file.read(buffer, this->bufferSize);
     if (! file.good()) {
         return -2;
     }
-
+    
     return 0;
-
+    
 }
 
 /*
@@ -70,12 +70,12 @@ int VarBuffer::write(fstream &file)
     if (! file.good()) {
         return -2;
     }
-
+    
     file.write(buffer, bufferSize);
     if (! file.good()) {
         return -2;
     }
-
+    
     return 0;
 }
 
@@ -89,10 +89,10 @@ int VarBuffer::pack(const void *object, unsigned short int size)
     if (size > this->maxSize) {
         return -3;
     } //buffer overflow
-
+    
     memcpy(buffer,object,size);
     this->bufferSize=size;
-
+    
     return 0;
 }
 
