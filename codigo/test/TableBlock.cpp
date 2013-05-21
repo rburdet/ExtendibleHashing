@@ -4,7 +4,7 @@
 #include "../logica_BlockTable.h"
 #include "../logica_Reg.h"
 
-#define TEST_FILE "./test_file_TESTBLOCKFILE"
+#define TEST_FILE "./test_file_TESTBLOCKFILE_table_Block"
 #define BLOCK_SIZE 512
 using namespace std;
 

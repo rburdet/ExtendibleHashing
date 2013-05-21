@@ -20,15 +20,7 @@ int main()
 	BlockTable* aBlockTable = new BlockTable(TEST_FILE_TABLE, TEST_FILE, BLOCK_SIZE);
 	int error=0;
 
-	//Inserto
 	fillData();
-	for(int i=0;i<DATA_LENGTH;i++){
-		cout << "** Agregando registro "<< i  << endl;
-		Reg *aReg= new Reg(DATA[i][0],DATA[i][0]);
-		aBlockTable->insert(*aReg);
-		delete aReg;
-	}
-
 	//Busco
 	for(int i=0;i<DATA_LENGTH;i++){
 		Reg* myReg = new Reg(DATA[i][0], 1);

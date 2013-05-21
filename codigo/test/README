@@ -1,0 +1,12 @@
+Requiere de tener la libreria compilada para funcionar.
+No tiene un formato de test, pero prueba el hash de manera cabeza.
+
+en config.h se tienen los parametros configurables para hacer pruebas.
+
+TableBlock -> Prueba el funcionamiento y persistencia de un blque
+
+BlockTable -> Genera datos de prueba y prubea el hash entero en memoria
+
+BlockTable_con_archivo -> Levanta los datos que dejo BlockTable y prueba qe sigan siendo coherentes.
+
+Todos los tests si causan algun error imprimen al final que sale con error. No setean exitcode.

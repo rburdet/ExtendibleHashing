@@ -7,7 +7,7 @@
 # Extensión de los archivos a compilar (c para C, cpp o cc o cxx para C++).
 extension = cpp
 
-TESTS = BlockTable TableBlock
+TESTS = BlockTable TableBlock BlockTable_con_archivo
 TMP_FILE_PREFIX = test_file_
 
 
