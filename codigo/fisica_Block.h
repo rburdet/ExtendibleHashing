@@ -14,9 +14,12 @@ Esta informacion incluye:
 #define BLOCK_H_
 
 
-#include "logica_Reg.h"
 #include <list>
+#include <string.h>
+#include <stdlib.h>
+#include "logica_Reg.h"
 #include "fisica_ArchivoBloques.h"
+#include "logica_HashExtensible.h"
 
 using namespace std;
 /*
@@ -26,7 +29,7 @@ using namespace std;
 
 class Block {
 	public:
-		Block(int DispersionSize,int blockAdress); //Creo un bloque en una tabla de bloques. Inicialmente el tamanio es 0
+		Block(int DispersionSize,int blockAdress, char* filePath, int blockSize); //Creo un bloque en una tabla de bloques. Inicialmente el tamanio es 0
 
 		//  Agrego un registro a la cubeta, los resultados posibles son: 0 sino se agrego, 1 si se agrego, 2 si se duplico el tamanio.
 		int Insert(Reg & aReg);
@@ -68,22 +71,22 @@ class Block {
 		//Devuelve el espacio ocupado dentro del bloque
 		int getCurrentSize();
 
-		void setList(list<Reg> newRegList);
+		//void setList(list<Reg> newRegList);
 
 		//Una vez que obtengo el bloque, tengo que buscar en la lista el registro que yo quiero
 		//Devuelvo el fileAdress de ese registro que es donde estara guardado el dato
 		//SI NO SE ENCUENTRA EL REGISTRO SE DEVUELVE 0
 		int search(Reg& aReg);
 
-		void read(const char* fileName);
-		void write(const char* fileName);
+		void read();
+		void write();
 		//TODO: solo el cierra
-		void open(const char * fileName);
-		void close();
-		ArchivoBloques* getArchivo();
+		//void open(const char * fileName);
+		//void close();
+		//ArchivoBloques* getArchivo();
 
 		//Obtengo el numero del ultimo bloque
-		int newBlockNum(const char* fileName);
+		int newBlockNum();
 
 		~Block();
 
@@ -96,6 +99,7 @@ class Block {
 		list<Reg> regsList;
 		//ArchivoBloques* archivo; //privado? constante?
 		int blockNum; //lo puedo llegar a necesitar
+		char *filePath;
 
 	private:
 		struct Metadata{

@@ -5,24 +5,28 @@
  *      Author: rburdet
  */
 #include "fisica_Block.h"
-#include "logica_HashExtensible.h"
-#include "logica_Reg.h"
-#include "config.h"
 
 using namespace std;
+
+int BLOQUES[255][40] = {{0}};
 
 //TODO: hidratar bloque
 
 //TODO: deshardcodear!!!
 #define REG_SIZE (sizeof(int)*2)
 
-Block::Block(int dispersionSize, int blockNum){
+Block::Block(int dispersionSize, int blockNum, char* filePath, int blockSize){
 	//TODO:revisar que se use all lo que esta aca
-	blockCurrentSize=0;
+	this->blockCurrentSize=0;
 	this->dispersionSize=dispersionSize;
-	//this->blockAdress=blockAdress; TODO: Como hago para laburar con el num de bloque?
-	maxBlockSize=MAX_BLOCK_SIZE;
+
+	//this->maxBlockSize=MAX_BLOCK_SIZE;
+	this->maxBlockSize=blockSize;
+
 	this->blockNum = blockNum;
+
+	this->filePath = (char*) calloc(strlen(filePath)+1, sizeof(char));
+	strcpy(this->filePath, filePath);
 }
 
 /*
@@ -30,11 +34,13 @@ Block::Block(int dispersionSize, int blockNum){
  * */
 
 //TODO: emprolijar
-int Block::newBlockNum(const char* fileName){
-	ArchivoBloques* archivo = new ArchivoBloques(MAX_BLOCK_SIZE, fileName);
-	if (!archivo->estaAbierto())
-		archivo->abrirArchivo();
-	return archivo->ultimoBloque();
+int Block::newBlockNum(){
+	ArchivoBloques archivo(this->maxBlockSize, this->filePath);
+	if (!archivo.estaAbierto())
+		archivo.abrirArchivo();
+	int ultimoBloque = archivo.ultimoBloque();
+	archivo.cerrarArchivo();
+	return ultimoBloque;
 
 }
 
@@ -82,14 +88,13 @@ int Block::getBlockAdress(){
 }*/
 
 bool Block::easyInsert(Reg& aReg){
-	cout << "\t\tregSize " << aReg.getSize()  << " blockCurre " << this->blockCurrentSize << " MAX_BLOCK " << MAX_BLOCK_SIZE <<  endl;
 	//TODO: tiene qeu ser menor o menor e igual?
-	return (aReg.getSize()+ this->blockCurrentSize <= MAX_BLOCK_SIZE);
+	return (aReg.getSize()+ this->blockCurrentSize <= this->maxBlockSize);
 }
 
-void Block::setList(list<Reg> newRegList){
-	this->regsList=newRegList;
-}
+//void Block::setList(list<Reg> newRegList){
+//	this->regsList=newRegList;
+//}
 
 //  Devuelve el addres si lo encuentra, sino -1, no ponog 0 por qe puede qe el addres sea 0, no? TODO: Checkear si esto es verdad
 int Block::search(Reg& regToLook){
@@ -146,62 +151,72 @@ void Block::write(const char*fileName){
 }
 */
 
-void Block::write(const char* fileName){ // TODO: pasar a .h
-	ArchivoBloques* archivo = new ArchivoBloques(MAX_BLOCK_SIZE, fileName);
+void Block::write(){ // TODO: pasar a .h
+	ArchivoBloques archivo(this->maxBlockSize, this->filePath);
 	// Inicializamos el archivo de bloques o lo levantamos si ya existia
-	if(archivo->abrirArchivo() == -1){
+	if(archivo.abrirArchivo() == -1){
 		// El archivo no existe, lo creamos
-		archivo->crearArchivo();
-		archivo->abrirArchivo();
+		archivo.crearArchivo();
+		archivo.abrirArchivo();
 	}
 	//Si existe pero esta cerrado, lo abrimos
-	if (!archivo->estaAbierto()){
-		archivo->abrirArchivo();
+	if (!archivo.estaAbierto()){
+		archivo.abrirArchivo();
 	}
-	//cout << " Max Block Size " << MAX_BLOCK_SIZE << endl;
-	int Buf[MAX_BLOCK_SIZE / sizeof(int)] = {0};
+
+	int *Buf = (int*) calloc(this->maxBlockSize, 1);
 	int i=0;
+
+	for(int i=0;i<20;i++)
+		BLOQUES[this->getBlockNum()][i] = 0;
+
 	list<Reg>::iterator it;
+	cout << " Write -> " ;
 	for(it = regsList.begin(); it!= regsList.end(); it++){
-		//cout << "Voy a guardar esto i=" << i << " id: " << it->getId()  << " add: " << it->getFileAdress() << endl;
+		BLOQUES[this->getBlockNum()][i] = it->getId();
 		Buf[i++] = it->getId();
+		BLOQUES[this->getBlockNum()][i] = it->getFileAdress();
 		Buf[i++] = it->getFileAdress();
+		cout << " '" << it->getId() << "' '" << it->getFileAdress() << "'";
 	}
+	cout << endl;
 
-	//Imprimo para debuggear
-	//for(unsigned int i=0; i < (MAX_BLOCK_SIZE / sizeof(int) ) ; i+=2)
-	//	printf("i= %d id= %d ad=%d \n", i, Buf[i],  Buf[i+1]);
-	//--
-
-	//cout << "num block " << this->getBlockNum() << endl;
-	archivo->escribirBloque((void*) Buf, this->getBlockNum(), MAX_BLOCK_SIZE);
-	archivo->cerrarArchivo();
+	archivo.escribirBloque((void*) Buf, this->getBlockNum(), this->maxBlockSize);
+	archivo.cerrarArchivo();
+	free(Buf);
 }
 
-void Block::read(const char* fileName){
-	ArchivoBloques* archivo = new ArchivoBloques(MAX_BLOCK_SIZE, fileName);
+void Block::read(){
+	ArchivoBloques archivo(this->maxBlockSize, this->filePath);
 	// Inicializamos el archivo de bloques o lo levantamos si ya existia
-	if(archivo->abrirArchivo() == -1){
-		// El archivo no existe, lo creamos, TODO: EL WRITE LO CREA
-	//	//archivo->crearArchivo();
-		//archivo->abrirArchivo();
+	if(archivo.abrirArchivo() == -1){
+		//TODO: Error
+		cout << "Error Abrir archivo!!!!! ***** " << endl;
 		return;
 	}
 	//Si existe pero esta cerrado, lo abrimos -> al pedo
-	if (!archivo->estaAbierto()){
-		archivo->abrirArchivo();
+	if (!archivo.estaAbierto()){
+		archivo.abrirArchivo();
 	}
-	int buf[MAX_BLOCK_SIZE/sizeof(int)] = {0};
+	//int *buf = (int*) calloc(this->maxBlockSize, 1);
+	int *buf = BLOQUES[this->getBlockNum()];
 
-	archivo->leerBloque((void*)buf,this->getBlockNum());
-	for (int i=0; ((unsigned int) i)<MAX_BLOCK_SIZE/sizeof(int) && buf[i]!=0; i++){ //Cuando viene un id =0 significa qe ya no hay mas info TODO: controlar qe no se pase del buffer
-		Reg* aReg= new Reg(buf[i],buf[i++]);
-		this->Insert(*aReg);
-		//cout << i << ") id= " << aReg->getId() << " add=" << aReg->getFileAdress() << endl;
-
+	//archivo.leerBloque( (void*)buf, this->getBlockNum());
+	cout << "Read ->" ;
+	//for (int i=0; ((unsigned int) i)<this->maxBlockSize/sizeof(int) && buf[i]!=0; i++){ //Cuando viene un id =0 significa qe ya no hay mas info TODO: controlar qe no se pase del buffer
+	for (int i=0; ((unsigned int) i)<this->maxBlockSize/sizeof(int); i+=2){
+		//TODO: donde libera los registros?
+		cout << " '" << buf[i] << "' '" << buf[i+1] << "'";
+		if(buf[i]!=0){
+			Reg* aReg= new Reg(buf[i],buf[i+1]);
+			this->Insert(*aReg);
+		}
 	}
-	archivo->cerrarArchivo();
-
+	cout << endl;
+	archivo.cerrarArchivo();
+	//TODO: DESCOMENTAR
+	//free(buf);
+	
 }/**/
 /*
 ArchivoBloques* Block::getArchivo(){
@@ -225,5 +240,5 @@ int Block::redistribute(Block* aNewBlock,int tableSize){
 }*/ //LA REDISPERSION LA TENDRIA QUE SABER HACER LA TABLA, NO EL BLOQUE
 
 Block::~Block() {
-
+	free(this->filePath);
 }

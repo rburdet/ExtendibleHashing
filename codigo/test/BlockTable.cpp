@@ -4,7 +4,9 @@
 #include "../logica_Reg.h"
 
 #define TEST_FILE "./test_file_TESTBLOCKFILE"
-#define DATA_LENGTH 65
+#define TEST_FILE_TABLE "./test_file_TESTTABLEFILE"
+#define DATA_LENGTH 7
+#define BLOCK_SIZE 24
 
 using namespace std;
 
@@ -19,7 +21,7 @@ void fillData(){
 
 int main()
 {
-	BlockTable* aBlockTable = new BlockTable();
+	BlockTable* aBlockTable = new BlockTable(TEST_FILE_TABLE, TEST_FILE, BLOCK_SIZE);
 	int error=0;
 
 	//Inserto

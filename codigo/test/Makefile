@@ -87,7 +87,7 @@ $(TESTS): $(o_files_no_main)
 	$(LD) $(LDFLAGS) $@.cpp $(o_files_no_main) $(LOADLIBS) $(LDLIBS) -o $@
 
 clean:
-	$(RM) $(TESTS) $(tmp_file)
+	$(RM) $(TESTS) $(tmp_file) .HashBlock*
 
 valgrind:
 	valgrind $(VGFLAGS) ./$(target) 

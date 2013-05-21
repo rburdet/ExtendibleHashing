@@ -21,11 +21,13 @@
 #include "fisica_ArchivoBloques.h"
 #include "logica_HashExtensible.h"
 #include "logica_Reg.h"
+#include <string.h>
 
 using namespace std;
 class BlockTable{
 	public:
-		BlockTable();	// Cuando se crea la tabla de bloques, se crea a partir del archivo.
+		//Path -> archivo de la tabla, blockPath -> archivo de bloques
+		BlockTable(string path, string blockPath, int blockSize);	// Cuando se crea la tabla de bloques, se crea a partir del archivo.
 		~BlockTable();	// Cierro los archivos, libero la memoria pedida por blockReferences.
 		int insert(Reg&); // A su vez llama al insertar del bloque
 		void insertBlock(int blockPos,int newBlockReference,int td); //En la posicion blockPos de la tabla pongo la nueva ref.
@@ -35,24 +37,25 @@ class BlockTable{
 		void duplicateTable();
 		int search(Reg&); // Busca el registro atraves de la funcion hash
 
-		//TODO:Hacer
-		int open(const char* fileName); //Abre el archivo donde tengo la tabla
-		int close(); // Lo cierra
+		void write(); //Escribe tabla a disco
+		void read(); //Lee tabla de disco
 
 		int getSize(); //Devuelve el tamanio de la tabla
 		bool canAddBlock(Block* aBlock); //Tengo referencias libres? true significa que no hace falta duplicar
 		void redisperse(Block* anOldBlock,Block* aNewBlock); //redisperso los registros del bloque viejo al bloque nuevo
-		void hidratateBlockTable();
+
 		void prueba(Block*);
 	protected:
 		int size;
 		int *blockReferences;
-		fstream* archivo;
+		char *filePath;
+		char *blockPath;
+		int blockSize;
 
-	private:
-		struct Metadata{
-			list<Reg> regList;
-		};
+	//private:
+	//	struct Metadata{
+	//		list<Reg> regList;
+	//	};
 };
 
 #endif
