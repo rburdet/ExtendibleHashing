@@ -62,11 +62,106 @@ void ArbolBmas::abrir(const char* nombre_archivo)
 		this->raiz = new NodoHoja< CANT_REG_NODO_HOJA, CANT_REG_NODO_INTERNO >;
 		this->raiz->inicializar(NUM_BLOQUE_RAIZ_INICIAL, 0);
 
+		// // DEBUG LINES
+		// try {
+		// 	NodoHoja< CANT_REG_NODO_HOJA, CANT_REG_NODO_INTERNO > h;
+		// 	h.inicializar(NUM_BLOQUE_RAIZ_INICIAL, 0);
+		// 	RegistroGenerico reg;
+		// 	uint bloque = 3;
+		// 	RegistroGenerico reg1;
+		// 	uint bloque1 = 4;
+		// 	RegistroGenerico reg2;
+		// 	uint bloque2 = 1;
+		// 	RegistroGenerico reg3;
+		// 	uint bloque3 = 2;
+		// 	RegistroGenerico reg4;
+		// 	uint bloque4 = 5;
+		// 	RegistroGenerico reg5;
+		// 	uint bloque5 = 7;
+		// 	RegistroGenerico reg6;
+		// 	uint bloque6 = 6;
+
+		// 	if(h.insertar(bloque, reg, this->archivo, this->contBloques))
+		// 		std::cout << "OVERFLOW " << 0 << std::endl;
+		// 	if(h.insertar(bloque1, reg1, this->archivo, this->contBloques))
+		// 		std::cout << "OVERFLOW " << 1 << std::endl;
+		// 	if(h.insertar(bloque2, reg2, this->archivo, this->contBloques))
+		// 		std::cout << "OVERFLOW " << 2 << std::endl;
+		// 	if(h.insertar(bloque3, reg3, this->archivo, this->contBloques))
+		// 		std::cout << "OVERFLOW " << 3 << std::endl;
+		// 	if(h.insertar(bloque4, reg4, this->archivo, this->contBloques))
+		// 		std::cout << "OVERFLOW " << 4 << std::endl;
+		// 	if(h.insertar(bloque5, reg5, this->archivo, this->contBloques))
+		// 		std::cout << "OVERFLOW " << 5 << std::endl;
+		// 	if(h.insertar(bloque6, reg6, this->archivo, this->contBloques))
+		// 		std::cout << "OVERFLOW " << 6 << std::endl;
+			
+		// 	std::cout << "ELEMENTOS EN LISTA: " << h.claves.tamanio() << 
+		// 		std::endl;
+		// 	std::cout << "REGISTROS EN LISTA: " << h.registros.tamanio() << 
+		// 		std::endl;
+
+		// 	uint a = 2;
+		// 	h.imprimir(a);
+
+		// 	std::cout << "DIVIDIMOS: " << std::endl;
+
+		// 	NodoHoja< CANT_REG_NODO_HOJA, CANT_REG_NODO_INTERNO > hh;
+		// 	hh.inicializar(NUM_BLOQUE_RAIZ_INICIAL+1, 0);
+
+		// 	std::cout << "hacia arriba: " << h.dividir(&hh) << std::endl;
+
+		// 	std::cout << "REGISTROS EN LISTA h: " << h.registros.tamanio() << 
+		// 		std::endl;
+		// 	std::cout << "REGISTROS EN LISTA hh: " << hh.registros.tamanio() << 
+		// 		std::endl;
+
+		// 	h.imprimir(a);
+		// 	hh.imprimir(a);
+
+		// 	RegistroGenerico reg7;
+		// 	uint bloque7 = 7;
+		// 	RegistroGenerico reg8;
+		// 	uint bloque8 = 8;
+		// 	RegistroGenerico reg9;
+		// 	uint bloque9 = 9;
+		// 	RegistroGenerico reg10;
+		// 	uint bloque10 = 10;
+
+		// 	h.insertar(bloque7, reg7, this->archivo, this->contBloques);
+		// 	h.insertar(bloque8, reg8, this->archivo, this->contBloques);
+		// 	h.insertar(bloque9, reg9, this->archivo, this->contBloques);
+		// 	h.insertar(bloque10, reg10, this->archivo, this->contBloques);
+
+		// 	h.imprimir(a);
+
+		// 	std::cout << "DIVIDIMOS: " << std::endl;
+
+		// 	NodoHoja< CANT_REG_NODO_HOJA, CANT_REG_NODO_INTERNO > hhh;
+		// 	hhh.inicializar(NUM_BLOQUE_RAIZ_INICIAL+2, 0);
+
+		// 	std::cout << "hacia arriba: " << h.dividir(&hhh) << std::endl;
+
+		// 	h.imprimir(a);
+		// 	hhh.imprimir(a);
+		// 	hh.imprimir(a);
+
+		// }
+		// catch(char const * e)
+		// {
+		// 	std::cout << e << std::endl;
+		// }
+
+		// std::cout << "NODO HOJA COMPLETO" << std::endl;
+		// std::cout << sizeof(*this->raiz) << std::endl;
+		// std::cout << sizeof(NodoHoja< CANT_REG_NODO_HOJA, CANT_REG_NODO_INTERNO >) << std::endl;
+		// // END DEBUG LINES
+
 		// Creamos metadata del arbol con valores iniciales
 		guardarMetadata();
 
 		// Guardamos nodo raiz inicial
-		this->archivo->escribirBloque(this->raiz, this->raiz->getNumBloque(),
+		this->archivo->escribirBloque((char*) this->raiz, this->raiz->getNumBloque(),
 			sizeof(*this->raiz));
 
 		return;

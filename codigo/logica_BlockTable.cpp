@@ -68,11 +68,11 @@ int BlockTable::insert(Reg & aReg){
 	int pos = HashExtensible::doHash(aReg.getId(),this->getSize());
 
 	int tmpBlockNumber = this->blockReferences[pos];
-
 	string name=HASH_BLOCK_FILE;
 
 	cout << "\tpos: "<< pos << " tempBlockNumber: " << tmpBlockNumber << " tamanio tabla:  " << this->getSize() << endl;
 	Block *tmpBlock = new Block(this->getSize(),tmpBlockNumber);
+	//cout << "ultimo bloque segun fede: "<< tmpBlock->newBlockNum(name.c_str())<< endl;
 
 	tmpBlock->read(name.c_str());
 
@@ -88,19 +88,17 @@ int BlockTable::insert(Reg & aReg){
 			duplicateTable();
 		}
 		// la posicion del nuevo bloque va a ser al final del archivo
-		int lastBlockNum=0; //TODO: el numero de bloque se guarda en otro archivo
 
+		//Con esto pasa las pruebas bien
+		//int lastBlockNum=0; //TODO: el numero de bloque se guarda en otro archivo
+		int lastBlockNum= tmpBlock->newBlockNum(name.c_str());
 		cout << "\tdispersion viejo= " << tmpBlock->getDispersionSize() ;
-		Block * anotherBlock = new Block(tmpBlock->duplicateDispersionSize(),lastBlockNum+1); //HARDCODEADA CABEZA
+		Block * anotherBlock = new Block(tmpBlock->duplicateDispersionSize(),lastBlockNum); //HARDCODEADA CABEZA
 		cout << "dispersion new= " << tmpBlock->getDispersionSize()<<endl ;
 
 		//si no tengo referencias repetidas tengo que duplicar la tabla
-		//TODO: Estoy perdiendo la referencia al viejo bloque
 		cout << "\tinserto bloque" << endl;
-		insertBlock(pos,lastBlockNum+1,tmpBlock->getDispersionSize());
-		cout << "block en 0 "<<this->blockReferences[0] <<endl;
-		//cout << "block en 1"<< this->blockReferences[1] << endl;
-		//cout << "block en 2"<< this->blockReferences[2] <<endl;
+		insertBlock(pos,lastBlockNum,tmpBlock->getDispersionSize());
 
 		//Estos 2 no andan...
 
@@ -135,11 +133,11 @@ void BlockTable::insertBlock(int blockPos,int newBlockNum,int td){
 
 	for (int i = blockPos; i < this->getSize(); i+=td) {
 		blockReferences[i]=newBlockNum;
-		cout << "estoy en insert Block pa la derecha "<< blockReferences[i]<<endl;
+		cout << "en la pos: "<< i<<" de blockReference tengo: "<< blockReferences[i]<<endl;
 	}
 	for (int i = blockPos-td; i >= 0; i-=td) {
 		blockReferences[i]=newBlockNum;
-		cout <<" estoy en insert block pa la izq "<< blockReferences[i]<<endl;
+		cout << "en la pos: "<< i<<" de blockReference tengo: "<< blockReferences[i]<<endl;
 	}
 }
 
@@ -169,7 +167,7 @@ void BlockTable::redisperse(Block* anOldBlock, Block* aNewBlock){
 void BlockTable::duplicateTable(){
 	int newBlockTableSize = size *2;
 	int *tmpBlockReference = new int [newBlockTableSize];
-	for (int i = 0; i < size ; i++) {
+	for (int i = 0; i <= size ; i++) {
 		tmpBlockReference[i] = blockReferences[i];
 		tmpBlockReference[2*i] = blockReferences[i];
 	}

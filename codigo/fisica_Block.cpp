@@ -29,6 +29,14 @@ Block::Block(int dispersionSize, int blockNum){
  * en un bloque yo tengo que agregar un registro, y ademas tengo que agregar ese bloque a la lista de bloques
  * */
 
+//TODO: emprolijar
+int Block::newBlockNum(const char* fileName){
+	ArchivoBloques* archivo = new ArchivoBloques(MAX_BLOCK_SIZE, fileName);
+	if (!archivo->estaAbierto())
+		archivo->abrirArchivo();
+	return archivo->ultimoBloque();
+
+}
 
 int Block::Insert(Reg & aReg){
 	//TODO: aReg.getSize() -> devuelve cualqiercosa, el size del reg es siempre REG_SIZE. DESHARDCODEAR

@@ -82,6 +82,9 @@ class Block {
 		void close();
 		ArchivoBloques* getArchivo();
 
+		//Obtengo el numero del ultimo bloque
+		int newBlockNum(const char* fileName);
+
 		~Block();
 
 	protected:

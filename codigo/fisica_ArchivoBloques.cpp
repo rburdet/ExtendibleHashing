@@ -101,3 +101,22 @@ int ArchivoBloques::leerBloque(void *registro, unsigned int numeroBloque)
     return datosLeidos;
 }
 
+unsigned int ArchivoBloques::ultimoBloque()
+{
+    file.seekg(0,file.end);
+    unsigned int numBloque = file.tellg()/this->blockSize;
+    return numBloque;    
+}
+
+
+
+
+
+
+
+
+
+
+
+
+

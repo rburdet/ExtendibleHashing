@@ -58,6 +58,8 @@ public:
      */
     int leerBloque(void* registro, unsigned int numeroBloque);
     
+    unsigned int ultimoBloque();
+    
     
     
 private:
