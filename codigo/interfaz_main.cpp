@@ -9,7 +9,7 @@ using namespace std;
 int main()
 {
 	BlockTable * aBlockTable = new BlockTable();
-	for (int i = 1 ; i<= 65 ; i++)
+	for (int i = 1 ; i<= 130 ; i++)
 	{
 		Reg * aReg = new Reg(i,10);
 		aBlockTable->insert(*aReg);
