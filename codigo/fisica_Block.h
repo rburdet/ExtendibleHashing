@@ -17,22 +17,22 @@ Esta informacion incluye:
 #include <list>
 #include <string.h>
 #include <stdlib.h>
-#include "logica_Reg.h"
 #include "fisica_ArchivoBloques.h"
 #include "logica_HashExtensible.h"
-
+#include "domain_RegistroGenerico.h"
+#include "runtimeConfig.h"
+#include "fisica_SerialBuffer.h"
 using namespace std;
-/*
- * El tamanio de registros en un bloque debe poder ser configurable desde afuera
- * ver bien !!!
- * */
 
+
+
+template <class T>
 class Block {
 	public:
-		Block(int DispersionSize,int blockAdress, char* filePath, int blockSize); //Creo un bloque en una tabla de bloques. Inicialmente el tamanio es 0
+		Block(int DispersionSize,int blockAdress, char* filePath, int blocksize); //Creo un bloque en una tabla de bloques. Inicialmente el tamanio es 0
 
 		//  Agrego un registro a la cubeta, los resultados posibles son: 0 sino se agrego, 1 si se agrego, 2 si se duplico el tamanio.
-		int Insert(Reg & aReg);
+		int Insert(T & aReg);
 
 		// Si el bloque queda en overflow tengo que crear otro para luego redistribuir los registros*/
 		Block* createNew(int newDispersionSize);
@@ -50,8 +50,10 @@ class Block {
 		// Cuando un bloque queda en overflow, necesito buscar el proximo bloque en donde pueda redispersar,  */
 		int getBlockInTable();
 		
+		void actualizar(T& newReg);
+
 		//Si entra el registro devuelve verdadero, si no falso
-		bool easyInsert(Reg& aReg);
+		bool easyInsert(T& aReg);
 
 		//Devuelve el tamanio de dispersion del bloque
 		int getDispersionSize();
@@ -63,48 +65,173 @@ class Block {
 		int getBlockNum();
 
 		//Devuelve la lista de registros
-		list<Reg> getRegList();
+		list<T> getRegList();
 
 		//Devuelve la posicion del bloque en el archivo de bloques
 		int getBlockAdress();
 
 		//Devuelve el espacio ocupado dentro del bloque
-		int getCurrentSize();
+		short int getNumberOfRegs();
 
-		//void setList(list<Reg> newRegList);
 
 		//Una vez que obtengo el bloque, tengo que buscar en la lista el registro que yo quiero
 		//Devuelvo el fileAdress de ese registro que es donde estara guardado el dato
 		//SI NO SE ENCUENTRA EL REGISTRO SE DEVUELVE 0
-		int search(Reg& aReg);
+		bool search(T*&);
 
 		void read();
 		void write();
-		//TODO: solo el cierra
-		//void open(const char * fileName);
-		//void close();
-		//ArchivoBloques* getArchivo();
 
 		//Obtengo el numero del ultimo bloque
-		int newBlockNum();
+		unsigned int newBlockNum();
 
 		~Block();
 
 	protected:
-		int blockCurrentSize;
-		int maxBlockSize; //Privado? constante?
-
-		//int blockAdress; TODO: SE USA ???
+		short int numberOfRegs;
+		int maxBlockSize;
 		int dispersionSize;
-		list<Reg> regsList;
-		//ArchivoBloques* archivo; //privado? constante?
-		int blockNum; //lo puedo llegar a necesitar
+		list< T > regsList;
+		int blockNum;
 		char *filePath;
 
 	private:
-		struct Metadata{
-
-		};
-
+		void getCurrentBuffer(SerialBuffer * );
 };
+
+template <class T>
+Block<T>::Block(int dispersionSize, int blockNum, char* filePath, int blocksize){
+	this->numberOfRegs=0;
+	this->dispersionSize=dispersionSize;
+	this->maxBlockSize=blocksize;
+	this->blockNum = blockNum;
+	this->filePath=new char[strlen(filePath)+1]();
+	strcpy(this->filePath, filePath);
+}
+
+
+template <class T>
+unsigned int Block<T>::newBlockNum(){
+	ArchivoBloques archivo(this->maxBlockSize, this->filePath);
+	return  archivo.ultimoBloque();
+}
+
+template <class T>
+int Block<T>::Insert(T & aReg){
+	this->numberOfRegs+=1;
+	this->regsList.push_back(aReg);
+	return 0;
+
+}
+
+
+template <class T>
+void Block<T>::changeDispersionSize(int newDispersionSize){
+	this->dispersionSize=newDispersionSize;
+}
+
+
+template <class T>
+list<T> Block<T>::getRegList(){
+	return this->regsList;
+}
+
+
+template <class T>
+int Block<T>::getBlockNum(){
+	return this->blockNum;
+}
+
+
+template <class T>
+int Block<T>::duplicateDispersionSize(){
+	return (this->dispersionSize*=2);
+}
+
+
+template <class T>
+int Block<T>::getDispersionSize(){
+	return dispersionSize;
+}
+
+
+template <class T>
+short int Block<T>::getNumberOfRegs(){
+	return this->numberOfRegs;
+}
+
+
+template <class T>
+bool Block<T>::easyInsert(T& aReg){
+	SerialBuffer aSerialBuffer(maxBlockSize);
+	this->getCurrentBuffer(&aSerialBuffer);
+	bool a = aReg.serializar(&aSerialBuffer);
+	return a;
+}
+
+template <class T>
+bool Block<T>::search(T*& regToLook){
+	typename list<T>::iterator it;
+	for (it = regsList.begin(); it != regsList.end(); it++){
+		if ((it)->getClave()==regToLook->getClave()){
+			memcpy(regToLook, &*it, sizeof(T));
+			return true;
+		}
+	}
+	return false;
+}
+
+template <class T>
+void Block<T>::getCurrentBuffer(SerialBuffer* aSerialBuffer){
+	aSerialBuffer->pack(&(this->numberOfRegs), sizeof(this->numberOfRegs));
+	typename list<T>::iterator it;
+	for(it = regsList.begin(); it!= regsList.end(); it++){
+		it->serializar(aSerialBuffer);
+	}
+}
+
+template <class T>
+void Block<T>::write(){
+	ArchivoBloques archivo(maxBlockSize,this->filePath);
+	SerialBuffer aSerialBuffer(maxBlockSize);
+	this->getCurrentBuffer(&aSerialBuffer);
+	archivo.escribirBloque(aSerialBuffer.getBuffer(),this->getBlockNum());
+}
+
+
+
+template <class T>
+void Block<T>::read(){
+	ArchivoBloques archivo(maxBlockSize,this->filePath);
+	if(!archivo.existe())
+		return;
+
+	SerialBuffer aSerialBuffer(maxBlockSize);
+	archivo.leerBloque(aSerialBuffer.getBuffer(),this->getBlockNum());
+	if(aSerialBuffer.unpack(&(this->numberOfRegs)))
+	regsList.clear();
+	for (int i=0; i < this->numberOfRegs;i++){
+		T reg;
+		reg.deserializar(&aSerialBuffer);
+		regsList.push_back(reg);
+	}
+}
+
+template <class T>
+Block<T>::~Block() {
+	regsList.clear();
+	delete [] this->filePath;
+}
+
+
+template <class T>
+void Block<T>::actualizar(T& newReg){
+	typename list<T>::iterator it;
+	for (it = regsList.begin(); it != regsList.end(); it++){
+		if (it->getClave() == newReg.getClave()){;
+			*it = newReg;
+		}
+	}
+}
+
 #endif

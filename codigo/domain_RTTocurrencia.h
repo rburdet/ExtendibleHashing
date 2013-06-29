@@ -4,6 +4,13 @@
 #include "logica_Comparable.h"
 #include <iostream>
 
+
+/**
+*   Autor: Pablo Rodriguez
+*
+*   RTTocurrencia representa un par de (idPalabra, idDoc,posicion)
+*   Se utiliza para generar las listas invertidas
+*/
 class RTTocurrencia : public Comparable{
     public:
         RTTocurrencia(unsigned int palabraId, unsigned int documentoId, unsigned int position);

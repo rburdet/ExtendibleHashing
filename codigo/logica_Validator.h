@@ -3,6 +3,11 @@
 
 #include <iostream>
 
+/**
+*   Autor: Pablo Rodriguez
+*
+*   Se encarga de validar diversas cosas
+*/
 class Validator{
     public:
         static int validateOpcion(std::string op);

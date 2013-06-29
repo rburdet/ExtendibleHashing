@@ -2,11 +2,17 @@
 #define INDEXER_H_INCLUDED
 
 #include <iostream>
-#include "logica_IndicePrimario.h"
 #include "logica_IndiceAutor.h"
 #include "logica_IndiceTitulo.h"
 #include "logica_RTTgenerator.h"
 
+
+/**
+*   Autor: Pablo Rodriguez
+*
+*   Es la clase madre de la Indexacion. Copia los temas al archivo maestro y va agregando las ocurrencias
+*   a los diferentes titulos
+*/
 class Indexer{
     public:
         Indexer();
@@ -19,12 +25,12 @@ class Indexer{
         int indexarAutores(std::string header, unsigned int songPosition);
         int indexarTitulo(std::string header, unsigned int songPosition);
         int generateRTT(std::string songPath, unsigned int songPosition);
-        IndicePrimario *primario;
-        IndiceAutor *indiceAutor;
-        IndiceTitulo *indiceTitulo;
+        IndiceAutor *autores;
+        IndiceTitulo *titulos;
         RTTgenerator *rtt;
         std::string fromPath;
-        std::string destPath;
+        std::string dest;
+        std::string masterName;
 };
 
 

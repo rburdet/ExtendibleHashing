@@ -22,6 +22,9 @@
  #include <string>
  #include <sstream>
  #include <iostream>
+ #include <fstream>
+
+using namespace std;
 
 template<class T>
 class SortExterno{
@@ -56,7 +59,7 @@ int SortExterno<T>::ordenar(){
     in.open((this->file).c_str(), std::ios::binary);
     if(in.fail())
     {
-       std::cout << "Error al abrir el archivo desordenado." << endl;
+       std::cout << "Error al abrir el archivo desordenado." << std::endl;
        return 1;
     }
 
@@ -67,7 +70,7 @@ int SortExterno<T>::ordenar(){
 
     //long posicion;
     //calculamos el número de registros
-    in.seekg(0,ios::end); //nos posicionamos al final del fichero
+    in.seekg(0,std::fstream::end); //nos posicionamos al final del fichero
 
     unsigned int cant_registros;
     //unsigned int totalbytes;
@@ -94,7 +97,8 @@ int SortExterno<T>::ordenar(){
     T *array;
     T** arrayPointer;
     //while (registrosCargados < num_registros)
-    in.seekg(0,ios::beg);
+    in.seekg(0,std::fstream::beg);
+
     while(!in.eof())
     {
         p = p + 1;
@@ -106,7 +110,7 @@ int SortExterno<T>::ordenar(){
         //data = new char[tamanyo*cant_registros];
         if(array == NULL)
         {
-           cout << "Error en la asignación de memoria\n";
+           std::cout << "Error en la asignación de memoria\n";
            return 1;
         }
 
@@ -116,8 +120,9 @@ int SortExterno<T>::ordenar(){
         unsigned int j = 0;
         //in.read(data+(j*tamanyo), tamanyo);
         //array[j]=(T*) (data+(j*tamanyo));
-
-        while((j < cant_registros) and !in.eof())
+        in >> array[j];
+        arrayPointer[j] = array + j;
+        while((j < cant_registros-1) and !in.eof())
         {
 
             /* if ((cantCargadaParcial + j) == num_registros)
@@ -126,13 +131,16 @@ int SortExterno<T>::ordenar(){
                  break;
              }*/
              //in.read((char *) &array[j], tamanyo);
+             j++;
              in >> array[j];
              arrayPointer[j] = array + j;
-             j++;
              //in.read(data+(j*tamanyo), tamanyo);
              //array[j]=(T*)(data+(j*tamanyo));
         }
         //cantCargadaParcial = cantCargadaParcial + j + 1;
+        if(j==cant_registros-1){
+            j++;
+        }
         cantACargar = j;
 
         //ordenar el array
@@ -153,7 +161,7 @@ int SortExterno<T>::ordenar(){
         out.open(s2.str().c_str(), std::fstream::app);
         if(out.fail())
         {
-           std::cout << "Error al crear el archivo de salida." << endl;
+           std::cout << "Error al crear el archivo de salida." << std::endl;
            return 1;
         }
 
@@ -198,8 +206,8 @@ void SortExterno<T>::mergear(unsigned int partes, unsigned int tamanio)
     T *r1, *r2;
     r1 =new T;
     r2 = new T;
-    ifstream t1, t2;
-    ofstream salida;
+    std::ifstream t1, t2;
+    std::ofstream salida;
 
     //char cnum[6];
 
@@ -233,7 +241,7 @@ void SortExterno<T>::mergear(unsigned int partes, unsigned int tamanio)
         //strcat(cnum, cadena.data());
         //strcat(cnum, ".dat");
         ss1 << ".dat";
-        t1.open(ss1.str().c_str(), ios::binary);
+        t1.open(ss1.str().c_str(), std::fstream::binary);
 
         i++;
         cadena = static_cast<std::ostringstream*>(&(std::ostringstream() << i))->str();
@@ -244,7 +252,7 @@ void SortExterno<T>::mergear(unsigned int partes, unsigned int tamanio)
         //strcat(cnum, cadena.data());
         //strcat(cnum, ".dat");
 
-        t2.open(ss2.str().c_str(), ios::binary);
+        t2.open(ss2.str().c_str(), std::fstream::binary);
 
         t1.seekg(0);
         t2.seekg(0);
@@ -344,12 +352,12 @@ unsigned long SortExterno<T>::dividir (T* array[], unsigned long inicio, unsigne
   //Mientras no se cruzen los índices
   while (izq < der)
   {
-    while (array[der]->comparar(pivote)) // array[der] > pivote
+    while ((array[der]->comparar(pivote))==1) // array[der] > pivote
     {
       der--;
     }
 
-    while ((izq < der) && (pivote->comparar(array[izq])))
+    while ((izq < der) && ((pivote->comparar(array[izq]))==1))
     {
       izq++;
     }

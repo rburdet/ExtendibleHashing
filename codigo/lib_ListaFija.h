@@ -1,7 +1,22 @@
 //
-//  ListaFija.h
-//	Implementación de una lista de tamaño máximo fijo, la cual imita las
-//  funcionalidades de la librería list de la STL. 
+//  lib_ListaFija.h
+//	ListaFija
+//	***************************************************************************
+//
+//	Implementacion de una lista de tamanio maximo fijo, la cual imita las
+//  funcionalidades de la libreria list de la STL.
+//
+//  RESTRICCIONES: Para la utilizacion de la lista es necesario que, de
+//  almacenarse tipos no primitivos, se defina dentro de este ultimo los
+//  siguientes metodos:
+//   
+//  	- serializar(SerialBuffer *buffer),
+//  	- deserializar(SerialBuffer *buffer).
+//
+//  Esto le permitira a la lista ser serializable y persistible.
+//
+//	TIPOS NATIVOS SOPORTADOS: Esta primer version de ListaFija solamente
+//	soporta el tipo nativo unsigned int.
 //
 
 
@@ -10,6 +25,14 @@
 
 
 #include <string>
+#include "fisica_SerialBuffer.h"
+
+
+// Definicion de tipo uint para utilizar nombre mas corto
+typedef unsigned int uint; 
+
+
+
 
 
 /* ****************************************************************************
@@ -17,20 +40,21 @@
  * ***************************************************************************/
 
 
-template < typename Tipo, size_t Tamanio > 
+template < typename Tipo > 
 class ListaFija 
 {
 
 private:
 	
-	Tipo lista[Tamanio];			// Arreglo que representa a la lista
+	size_t Tamanio;
+	Tipo *lista;					// Arreglo que representa a la lista
 	size_t tamanioParcial;			// Tamanio real de la lista, la cual será
 									// siempre menor o igual a Tamanio.
 
 public:
 
 	// Constructor
-	ListaFija();
+	ListaFija(size_t Tamanio);
 
 	// Destructor
 	~ListaFija();
@@ -44,6 +68,11 @@ public:
 	// Inserta un nuevo elemento al final de la lista.
 	// PRE: 'elemento' es el dato a insertar.
 	void insertarUltimo(const Tipo elemento);
+
+	// Reemplaza el contenido de una posicion con un nuevo elemento.
+	// PRE: 'elemento' es el elemento nuevo; 'pos' es la posicion
+	// en la que se desea reemplazar.
+	void reemplazar(Tipo elemento, const size_t pos);
 
 	// Devuelve un puntero al primer elemento
 	Tipo verPrimero();
@@ -85,8 +114,22 @@ public:
 	// posicion.
 	// POST: la lista desde la que se realiza la transferencia disminuye su
 	// tamaño de acuerdo a la cantidad de elementos que se transfirieron.
-	void transferir(ListaFija< Tipo, Tamanio >& lista, size_t pos_ini, 
+	void transferir(ListaFija< Tipo > *lista, size_t pos_ini, 
 		size_t pos_fin);
+
+	// Serializa la lista.
+	// PRE: 'buffer' es el buffer en donde se serializara la lista para poder
+	// ser almacenada en algun medio.
+	void serializar(SerialBuffer *buffer);
+
+	// Deserializa una lista.
+	// PRE: 'buffer' es el buffer en donde se encuentra serializada la lista.
+	// POST: el estado de la lista se actualiza con los datos obtenidos del
+	// buffer.
+	void deserializar(SerialBuffer *buffer);
+
+	// Devuelve el tamanio en bytes que ocuparia persistir la clase.
+	static size_t getBytesUsados();
 };
 
 
@@ -97,26 +140,110 @@ public:
  * ***************************************************************************/
 
 
+
+/* PRIVADO
+ * Utilizado para serializar dependiendo de si se esta conteniendo elementos de
+ * tipo primitivo o no.
+ */
+namespace {
+
+	// Serializacion de tipos no primitivos
+	template <typename Tipo >
+	struct Serializacion
+	{
+		// Serializacion
+		void serializar(SerialBuffer *buffer, Tipo lista[], 
+			size_t tamanioParcial)
+		{
+			// Iteramos sobre cada elemento y los vamos serializando en orden
+			for(size_t i = 0; i < tamanioParcial; i++)
+				lista[i].serializar(buffer);
+		}
+
+		// Deserializacion
+		void deserializar(SerialBuffer *buffer, 
+			ListaFija< Tipo> *estaLista)
+		{
+			size_t tamanioParcial;
+
+			// Tomamos el tamanio parcial de la lista
+			buffer->unpack(&tamanioParcial);
+
+			// Cargamos los elementos
+			for(size_t i = 0; i < tamanioParcial; i++)
+			{
+				Tipo e;
+				e.deserializar(buffer);
+				estaLista->insertarUltimo(e);
+			}
+		}
+	};
+
+
+	// Serializacion del tipo primitivo UNSIGNED INT
+	template <>
+	struct Serializacion< uint > 
+	{
+		// Serializacion
+		void serializar(SerialBuffer *buffer, uint lista[], 
+			size_t tamanioParcial)
+		{
+			// Iteramos sobre cada elemento y los vamos serializando en orden
+			for(size_t i = 0; i < tamanioParcial; i++)
+				buffer->pack(&(lista[i]), sizeof(unsigned int));
+		}
+
+		// Deserializacion
+		void deserializar(SerialBuffer *buffer, 
+			ListaFija< uint > *estaLista)
+		{
+			size_t tamanioParcial;
+
+			// Tomamos el tamanio parcial de la lista
+			buffer->unpack(&tamanioParcial);
+
+			// Cargamos los elementos
+			for(size_t i = 0; i < tamanioParcial; i++)
+			{
+				uint e;
+				buffer->unpack(&e);
+				estaLista->insertarUltimo(e);
+			}
+		}
+	};
+}
+/* FIN PRIVADO */
+
+
+
+
 // Constructor
-template <typename Tipo, size_t Tamanio >
-ListaFija< Tipo, Tamanio >::ListaFija() : tamanioParcial(0) { }
+template <typename Tipo >
+ListaFija< Tipo >::ListaFija(size_t Tamanio) : Tamanio(Tamanio), 
+	tamanioParcial(0) 
+{
+	this->lista = new Tipo[this->Tamanio];
+}
 
 
 // Destructor
-template <typename Tipo, size_t Tamanio >
-ListaFija< Tipo, Tamanio >::~ListaFija() { }
+template <typename Tipo >
+ListaFija< Tipo >::~ListaFija() 
+{
+	delete [] this->lista;
+}
 
 
 // Inserta un nuevo elemento en una posicion especifica de la lista
 // desplazando los demas elementos hacia adelante
 // PRE: 'elemento' es el elemento a insertar; 'pos' es la posicion
 // en la que se desea insertar.
-template <typename Tipo, size_t Tamanio >
-void ListaFija< Tipo, Tamanio >::insertar(Tipo elemento, const size_t pos)
+template <typename Tipo >
+void ListaFija< Tipo >::insertar(Tipo elemento, const size_t pos)
 {
 	// Corroboramos que la posicion sea valida
 	if(pos > this->tamanioParcial)
-		throw "ERROR: Posicion de lista inválido.";
+		throw "ERROR: Posicion de lista inválida.";
 	// Corroboramos que no este llena
 	else if(this->estaLlena()) 
 		throw "ERROR: Lista llena. No puede insertarse elemento.";
@@ -137,21 +264,35 @@ void ListaFija< Tipo, Tamanio >::insertar(Tipo elemento, const size_t pos)
 
 // Inserta un nuevo elemento al final de la lista.
 // PRE: 'elemento' es el dato a insertar.
-template <typename Tipo, size_t Tamanio >
-void ListaFija< Tipo, Tamanio >::insertarUltimo(const Tipo elemento)
+template <typename Tipo >
+void ListaFija< Tipo >::insertarUltimo(const Tipo elemento)
 {
 	// Corroboramos que no este llena
 	if(this->estaLlena()) 
 		throw "ERROR: Lista llena. No puede insertarse elemento.";
 
-	this->lista[tamanioParcial] = elemento;
+	this->lista[this->tamanioParcial] = elemento;
 	++tamanioParcial;
 }
 
 
+// Reemplaza el contenido de una posicion con un nuevo elemento.
+// PRE: 'elemento' es el elemento nuevo; 'pos' es la posicion
+// en la que se desea reemplazar.
+template <typename Tipo >
+void ListaFija< Tipo >::reemplazar(Tipo elemento, const size_t pos)
+{
+	// Corroboramos que la posicion sea valida
+	if(pos > this->tamanioParcial)
+		throw "ERROR: Posicion de lista inválida.";
+
+	this->lista[pos] = elemento;
+}
+
+
 // Devuelve un puntero al primer elemento
-template <typename Tipo, size_t Tamanio >
-Tipo ListaFija< Tipo, Tamanio >::verPrimero()
+template <typename Tipo >
+Tipo ListaFija< Tipo >::verPrimero()
 {
 	// Corroboramos que no este vacia
 	if(this->estaVacia())
@@ -162,8 +303,8 @@ Tipo ListaFija< Tipo, Tamanio >::verPrimero()
 
 
 // Devuelve el ultimo elemento de la lista.
-template <typename Tipo, size_t Tamanio >
-Tipo ListaFija< Tipo, Tamanio >::verUltimo()
+template <typename Tipo >
+Tipo ListaFija< Tipo >::verUltimo()
 {
 	// Corroboramos que no este vacia
 	if(this->estaVacia())
@@ -175,8 +316,8 @@ Tipo ListaFija< Tipo, Tamanio >::verUltimo()
 
 // Elimina el ultimo elemento de la lista decrementando una unidad su 
 // tamanio.
-template <typename Tipo, size_t Tamanio >
-void ListaFija< Tipo, Tamanio >::eliminarUltimo()
+template <typename Tipo >
+void ListaFija< Tipo >::eliminarUltimo()
 {
 	// Corroboramos que no este vacia
 	if(this->estaVacia())
@@ -188,8 +329,8 @@ void ListaFija< Tipo, Tamanio >::eliminarUltimo()
 
 
 // Devuelve la cantidad de elementos contenidos en la lista.
-template <typename Tipo, size_t Tamanio >
-size_t ListaFija< Tipo, Tamanio >::tamanio()
+template <typename Tipo >
+size_t ListaFija< Tipo >::tamanio()
 {
 	return this->tamanioParcial;
 }
@@ -198,8 +339,8 @@ size_t ListaFija< Tipo, Tamanio >::tamanio()
 // Verifica si una lista se encuentra vacía.
 // POST: Devuelve verdadero si la lista se encuentra vacía o falso en 
 // caso contrario.
-template <typename Tipo, size_t Tamanio >
-bool ListaFija< Tipo, Tamanio >::estaVacia()
+template <typename Tipo >
+bool ListaFija< Tipo >::estaVacia()
 {
 	return (tamanioParcial == 0);
 }
@@ -209,8 +350,8 @@ bool ListaFija< Tipo, Tamanio >::estaVacia()
 // se igualan la cantidad de elementos con el valor de Tamanio).
 // POST: Devuelve verdadero si la lista se encuentra llena o falso en caso
 // contrario.
-template <typename Tipo, size_t Tamanio >
-bool ListaFija< Tipo, Tamanio >::estaLlena()
+template <typename Tipo >
+bool ListaFija< Tipo >::estaLlena()
 {
 	return (tamanioParcial == Tamanio);
 }
@@ -220,8 +361,8 @@ bool ListaFija< Tipo, Tamanio >::estaLlena()
 // Permite acceder a los índices de la lista mediante la notación lista[i], 
 // donde i es un número entero comprendido entre [0, n-1], siendo n el tamaño
 // de la lista.
-template <typename Tipo, size_t Tamanio >
-Tipo ListaFija< Tipo, Tamanio >::operator[] (const size_t indice)
+template <typename Tipo >
+Tipo ListaFija< Tipo >::operator[] (const size_t indice)
 {	
 	// Corroboramos que no este vacia
 	if(this->estaVacia())
@@ -244,8 +385,8 @@ Tipo ListaFija< Tipo, Tamanio >::operator[] (const size_t indice)
 // posicion.
 // POST: la lista desde la que se realiza la transferencia disminuye su
 // tamaño de acuerdo a la cantidad de elementos que se transfirieron.
-template <typename Tipo, size_t Tamanio >
-void ListaFija< Tipo, Tamanio >::transferir(ListaFija< Tipo, Tamanio >& lista, 
+template <typename Tipo >
+void ListaFija< Tipo >::transferir(ListaFija< Tipo >* lista, 
 	size_t pos_ini, size_t pos_fin)
 {
 	// Corroboramos que no este vacia
@@ -255,15 +396,54 @@ void ListaFija< Tipo, Tamanio >::transferir(ListaFija< Tipo, Tamanio >& lista,
 	else if(pos_ini > this->tamanioParcial || pos_fin > this->tamanioParcial)
 		throw "ERROR: Una o ambas posiciones de transferencia son inválidas";
 	// Corroboramos que no este llena
-	else if(lista.estaLlena()) 
+	else if(lista->estaLlena()) 
 		throw "ERROR: La lista destino en transferencia se encuentra llena.";
 
 	// Iteramos y transferimos elementos
 	for(size_t i = pos_ini; i <= pos_fin; i++)
 	{
-		lista.insertarUltimo(this->lista[i]);
+		lista->insertarUltimo(this->lista[i]);
 		--this->tamanioParcial;
 	}
 }
+
+
+// Serializa la lista.
+// PRE: 'buffer' es el buffer en donde se serializara la lista para poder
+// ser almacenada en algun medio.
+template <typename Tipo >
+void ListaFija< Tipo >::serializar(SerialBuffer *buffer)
+{
+	size_t tamanioParcial = this->tamanioParcial;
+
+	// Serializamos primero el tamanio y despues el arreglo
+	buffer->pack(&tamanioParcial, sizeof(tamanioParcial));
+
+	Serializacion< Tipo > s;
+	s.serializar(buffer, this->lista, tamanioParcial);
+}
+
+
+// Deserializa una lista.
+// PRE: 'buffer' es el buffer en donde se encuentra serializada la lista.
+// POST: el estado de la lista se actualiza con los datos obtenidos del
+// buffer.
+template <typename Tipo >
+void ListaFija< Tipo >::deserializar(SerialBuffer *buffer)
+{
+	Serializacion< Tipo > s;
+	s.deserializar(buffer, this);
+}
+
+
+// Devuelve el tamanio en bytes que ocuparia persistir la clase.
+template <typename Tipo >
+size_t ListaFija< Tipo >::getBytesUsados()
+{
+	// Retornamos la cantidad de bytes usadas para saber el tamanio parcial de
+	// la lista
+	return sizeof(size_t);
+}
+
 
 #endif

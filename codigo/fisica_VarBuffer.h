@@ -22,7 +22,7 @@ class VarBuffer
 {
     
 public:
-    VarBuffer(unsigned int maxSize);
+    VarBuffer(const unsigned int maxSize);
     ~VarBuffer();
     void clear();
     int read(fstream &file);
@@ -30,8 +30,9 @@ public:
     int pack(const void* object, unsigned short int size);
     int unpack(void* object);
     unsigned short int getBuffSize();
+    char* getBuffer();
     
-private:
+protected:
     unsigned short int bufferSize;
     unsigned short int maxSize;
     char* buffer;
